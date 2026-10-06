@@ -1,0 +1,40 @@
+{
+  "dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz.csv",
+  "target": "soc_proxy_percent",
+  "target_status": "approximate_capacity_referenced_coulomb_counting_proxy",
+  "input_features": [
+    "voltage_v",
+    "current_a",
+    "battery_temp_c",
+    "elapsed_time_s"
+  ],
+  "excluded_target_source_channel": "Ah",
+  "split_method": "fixed complete-cycle holdout",
+  "random_state": 42,
+  "train_cycle_ids": [
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+    "03-20-17_01.43 25degC_US06_Pan18650PF",
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+    "03-21-17_16.27 25degC_NN_Pan18650PF"
+  ],
+  "test_cycle_ids": [
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+    "03-21-17_09.38 25degC_LA92_Pan18650PF"
+  ],
+  "train_sample_count": 75375,
+  "test_sample_count": 37326,
+  "candidates": [
+    "RidgeRegression",
+    "RandomForestRegressor",
+    "ExtraTreesRegressor"
+  ],
+  "scaling": "Ridge uses StandardScaler within its training-only pipeline; tree models use raw features.",
+  "selection_status": "No model selected. Compare metrics and limitations before the separate model-selection phase.",
+  "evaluation_scope": "Held-out-cycle agreement with a derived proxy only. The holdout includes Cycle 4, which has proxy values outside [0, 100]. This does not establish physical SoC accuracy or generalization to other cells or temperatures.",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}

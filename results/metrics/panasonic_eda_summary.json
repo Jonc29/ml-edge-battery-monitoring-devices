@@ -1,0 +1,106 @@
+{
+  "dataset": "Panasonic 18650PF 25 \u00b0C separate drive-cycle proxy table",
+  "row_count": 112701,
+  "cycle_count": 10,
+  "rows_per_cycle": {
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF": 10972,
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF": 11137,
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF": 10253,
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF": 12095,
+    "03-20-17_01.43 25degC_US06_Pan18650PF": 4812,
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF": 7603,
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF": 7589,
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF": 22431,
+    "03-21-17_09.38 25degC_LA92_Pan18650PF": 14094,
+    "03-21-17_16.27 25degC_NN_Pan18650PF": 11715
+  },
+  "columns": [
+    "voltage_v",
+    "current_a",
+    "battery_temp_c",
+    "elapsed_time_s",
+    "soc_proxy_percent"
+  ],
+  "statistics": {
+    "voltage_v": {
+      "count": 112701,
+      "mean": 3.6700184073788167,
+      "std": 0.26234704336993836,
+      "median": 3.66332,
+      "minimum": 2.50205,
+      "maximum": 4.2361
+    },
+    "current_a": {
+      "count": 112701,
+      "mean": -0.8475844526667908,
+      "std": 1.933994051426303,
+      "median": -0.58715,
+      "minimum": -19.93532,
+      "maximum": 9.87836
+    },
+    "battery_temp_c": {
+      "count": 112701,
+      "mean": 26.737751400289255,
+      "std": 1.0717253305632126,
+      "median": 26.46011,
+      "minimum": 21.781981,
+      "maximum": 32.77033
+    },
+    "elapsed_time_s": {
+      "count": 112701,
+      "mean": 6542.9415166726285,
+      "std": 4801.935764347827,
+      "median": 5732.093994319439,
+      "minimum": 0.0,
+      "maximum": 22447.067000716925
+    },
+    "soc_proxy_percent": {
+      "count": 112701,
+      "mean": 52.127923607601396,
+      "std": 28.302948345322722,
+      "median": 52.74259170501598,
+      "minimum": -0.8374986035683651,
+      "maximum": 100.0
+    }
+  },
+  "pearson_correlation": {
+    "voltage_v": {
+      "voltage_v": 1.0,
+      "current_a": 0.2698840497289151,
+      "battery_temp_c": -0.4518364816546991,
+      "elapsed_time_s": -0.6868051663840006,
+      "soc_proxy_percent": 0.9481627764862921
+    },
+    "current_a": {
+      "voltage_v": 0.2698840497289151,
+      "current_a": 0.9999999999999999,
+      "battery_temp_c": -0.10288985558862927,
+      "elapsed_time_s": 0.07963998738765078,
+      "soc_proxy_percent": 0.0016985219678329556
+    },
+    "battery_temp_c": {
+      "voltage_v": -0.4518364816546991,
+      "current_a": -0.10288985558862926,
+      "battery_temp_c": 1.0,
+      "elapsed_time_s": 0.025364570420617395,
+      "soc_proxy_percent": -0.4073498882071564
+    },
+    "elapsed_time_s": {
+      "voltage_v": -0.6868051663840007,
+      "current_a": 0.07963998738765078,
+      "battery_temp_c": 0.02536457042061739,
+      "elapsed_time_s": 0.9999999999999998,
+      "soc_proxy_percent": -0.7814095398636285
+    },
+    "soc_proxy_percent": {
+      "voltage_v": 0.9481627764862921,
+      "current_a": 0.0016985219678329559,
+      "battery_temp_c": -0.40734988820715634,
+      "elapsed_time_s": -0.7814095398636285,
+      "soc_proxy_percent": 1.0
+    }
+  },
+  "interpretation": "Descriptive pooled-row analysis of one cell at 25 \u00b0C. Time-series rows are correlated and cycle sizes differ, so these values are not independent-sample inference or evidence of causation. The target is an approximate derived proxy, not measured SoC.",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}

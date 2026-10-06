@@ -23,6 +23,17 @@ and limitations before interpreting model scores.
 - Phase 6 (model setup): created an approximate capacity-referenced SoC proxy
   from measured pre-test 1C capacities and trained a grouped-holdout baseline.
   Scores quantify proxy agreement only.
+- Roadmap Phase 3 (preprocessing): added input validation, a cleaning log, and
+  a `StandardScaler` fitted only on complete-cycle training rows. Generated
+  clean and scaled tables are local processed artifacts, not ground-truth data.
+- Roadmap Phase 4 (EDA): representative measured-signal, distribution, and
+  correlation figures have been generated for the prepared Panasonic proxy
+  table.
+- Roadmap Phase 5 (model comparison): Ridge Regression, Random Forest, and
+  Extra Trees were compared on the same fixed three-cycle holdout.
+- Roadmap Phase 6 (model selection): Random Forest is selected provisionally
+  for optimization based on the fixed-holdout proxy-agreement results. This is
+  not validated physical SoC performance.
 - Physical hardware testing and power measurement: not performed.
 
 See the [dataset candidate investigation](./reports/dataset-investigation.md)
@@ -191,6 +202,57 @@ their mean, writing per-cycle and overall differences to
 `results/metrics/panasonic_soc_proxy_sensitivity.json`. It uses the existing
 proxy samples to rescale relative Ah change; the comparison is a sensitivity
 check, not a confidence interval or validation against physical SoC.
+
+Validate and prepare model inputs with a cycle-grouped training split:
+
+```bash
+python -m src.preprocessing.prepare_panasonic_model_data
+```
+
+The command writes a validated clean table and a scaled table under
+`data/processed/`, plus the training-only scaler parameters and cleaning log
+under `results/metrics/`. It preserves all proxy values, including values
+outside 0–100%, and fails on malformed or duplicate time samples instead of
+silently dropping them. These generated tables are local data artifacts and are
+excluded from Git.
+
+Generate pooled-row distribution and correlation figures for the inputs and
+the explicitly approximate target with:
+
+```bash
+python -m src.data.eda_panasonic_proxy
+```
+
+Figures are saved under `results/figures/` and descriptive statistics and
+correlations under `results/metrics/panasonic_eda_summary.json`. The pooled
+time-series rows are not independent samples, so these figures are descriptive
+only and do not establish causality or physical SoC accuracy.
+
+Compare baseline regressors on a fixed complete-cycle holdout with:
+
+```bash
+python -m src.models.compare_panasonic_models
+```
+
+This writes `results/comparisons/model_comparison.csv` and split/provenance
+metadata under `results/metrics/`. Cycle 2, Cycle 4, and LA92 are held out;
+including Cycle 4 tests behavior on a run with proxy values outside 0–100%.
+All scores measure agreement with the approximate proxy, and this comparison
+does not automatically select a final model.
+
+Select the candidate for the next optimization phase with:
+
+```bash
+python -m src.models.select_panasonic_model
+```
+
+The script chooses by lowest aggregate MAE (RMSE as a tie-breaker), records
+the evidence and limitations in
+`results/metrics/panasonic_model_selection.json`, and saves a selected-model
+artifact in `models/baseline/`. That artifact is refit on the comparison
+training cycles only; it does not train on the held-out cycles. Because the
+holdout informed selection, it is not an independent final performance
+estimate.
 
 ## Reproducibility principles
 

@@ -1,0 +1,89 @@
+{
+  "selected_model": "RandomForestRegressor",
+  "decision_status": "provisional_for_optimization_phase",
+  "decision_criteria": [
+    "Lowest aggregate MAE among candidates on identical held-out cycles.",
+    "Use aggregate RMSE and R2 as supporting metrics.",
+    "Inspect each held-out cycle, including Cycle 4.",
+    "Keep the selected estimator trainable with the existing bounded tree settings."
+  ],
+  "reason": "Random Forest has the lowest aggregate MAE and RMSE and the highest R2 of the three candidates on this fixed holdout. It also has the lowest MAE on each of the three individual held-out cycles.",
+  "comparison_metrics": {
+    "mae_percentage_points": 2.258362990285204,
+    "rmse_percentage_points": 3.0700056391428485,
+    "r2": 0.989017775099307,
+    "per_cycle": {
+      "03-19-17_03.25 25degC_Cycle_2_Pan18650PF": {
+        "mae_percentage_points": 2.3199524584075535,
+        "r2": 0.9885071126270366,
+        "rmse_percentage_points": 3.109455124916397,
+        "sample_count": 11137
+      },
+      "03-19-17_14.31 25degC_Cycle_4_Pan18650PF": {
+        "mae_percentage_points": 2.2544370300810437,
+        "r2": 0.990766589636343,
+        "rmse_percentage_points": 3.029761556847289,
+        "sample_count": 12095
+      },
+      "03-21-17_09.38 25degC_LA92_Pan18650PF": {
+        "mae_percentage_points": 2.2130644648269047,
+        "r2": 0.9873178470017804,
+        "rmse_percentage_points": 3.0729409517732504,
+        "sample_count": 14094
+      }
+    }
+  },
+  "other_candidates": [
+    {
+      "model": "RidgeRegression",
+      "mae_percentage_points": 3.1263686247272933,
+      "rmse_percentage_points": 5.074974840055443,
+      "r2": 0.9699890478905808
+    },
+    {
+      "model": "ExtraTreesRegressor",
+      "mae_percentage_points": 3.222290223752377,
+      "rmse_percentage_points": 4.309062694639869,
+      "r2": 0.9783639681255925
+    }
+  ],
+  "model_parameters": {
+    "n_estimators": 100,
+    "min_samples_leaf": 2,
+    "max_leaf_nodes": 128,
+    "max_features": 1.0,
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "training_data": {
+    "dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz.csv",
+    "train_cycle_ids": [
+      "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+      "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+      "03-20-17_01.43 25degC_US06_Pan18650PF",
+      "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+      "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+      "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+      "03-21-17_16.27 25degC_NN_Pan18650PF"
+    ],
+    "test_cycle_ids": [
+      "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+      "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+      "03-21-17_09.38 25degC_LA92_Pan18650PF"
+    ],
+    "train_sample_count": 75375,
+    "test_sample_count": 37326,
+    "estimator_refit_on_training_cycles_only": true
+  },
+  "artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/models/baseline/panasonic_soc_proxy_selected_rf.joblib",
+  "target_status": "approximate_capacity_referenced_coulomb_counting_proxy",
+  "limitations": [
+    "This model choice is provisional and based on one fixed split of ten cycles from one cell at 25 \u00b0C.",
+    "The choice uses the comparison holdout; its metrics are selection evidence and are not an independent final performance estimate.",
+    "All reported scores measure agreement with the derived proxy, not validated physical SoC accuracy.",
+    "No physical hardware, memory, latency, or power comparison has been done yet."
+  ],
+  "next_phase": "Optimize the selected Random Forest experimentally and compare accuracy against the same held-out cycles. Treat those results as exploratory because this holdout informed model selection.",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}

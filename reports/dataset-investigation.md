@@ -202,6 +202,107 @@ No Ah-derived channel should be added to the estimator inputs. Before making
 claims about physical SoC accuracy or expanding to other temperatures, the
 initial-state and per-run capacity assumptions need independent validation.
 
+## Preprocessing readiness
+
+The prepared proxy table was checked for finite feature and target values,
+empty cycle IDs, repeated exact rows, duplicate `(cycle_id, elapsed_time_s)`
+keys, and time reversals within cycles. The current table has no malformed rows
+or duplicate sample keys. It contains 506 proxy samples outside 0–100%; these
+are retained and must not be silently clipped or removed. The nominal sampling
+period is one second, but selected source observations have intervals ranging
+from about 0.095 to 3.108 seconds, so the table is approximately sampled rather
+than precisely interpolated at fixed one-second intervals.
+
+The preprocessing command
+[`src/preprocessing/prepare_panasonic_model_data.py`](../src/preprocessing/prepare_panasonic_model_data.py)
+validates these conditions, writes a clean copy and a scaled feature table, and
+records its decisions in `results/metrics/panasonic_preprocessing_log.json`.
+`StandardScaler` parameters in `results/metrics/panasonic_feature_scaler.json`
+are fit only on the seeded 80/20 complete-cycle training groups; the scaler is
+then applied to both train and held-out feature rows. The proxy target and cycle
+IDs are preserved, and `Ah` is not a feature. This split matches the initial
+baseline split only. The later model comparison uses an expanded fixed
+three-cycle holdout that also includes Cycle 4; its Ridge scaler is fit inside
+that model's training-only pipeline. Do not reuse the scaler artifact from the
+initial split for that comparison, because it includes Cycle 4 among its
+training cycles. Scaling is not itself a model-performance result and does not
+improve the validity of the proxy target.
+
+## Exploratory data analysis
+
+The descriptive EDA command
+[`src/data/eda_panasonic_proxy.py`](../src/data/eda_panasonic_proxy.py)
+generates pooled-row histograms for voltage, current, battery temperature,
+elapsed time, and the approximate SoC proxy, plus a Pearson correlation
+heatmap. The numerical summary is recorded in
+[`results/metrics/panasonic_eda_summary.json`](../results/metrics/panasonic_eda_summary.json);
+the figures are
+[`results/figures/panasonic_feature_distributions.png`](../results/figures/panasonic_feature_distributions.png)
+and
+[`results/figures/panasonic_feature_correlation.png`](../results/figures/panasonic_feature_correlation.png).
+These figures pool 112,701 time-series observations from ten cycles of one cell
+at 25 °C. Rows within a cycle are correlated, cycle sizes differ, and the target
+is derived from the measured Ah channel. Therefore, correlations and
+distributions are descriptive only; they do not establish causation, validate
+physical SoC, or provide independent-sample statistical inference.
+
+In this pooled table, Pearson correlation is about 0.948 between voltage and
+the proxy and -0.781 between elapsed time and the proxy; current has near-zero
+linear correlation with the proxy (about 0.002). These are descriptive
+associations only. In particular, elapsed time and voltage may track
+discharge progress, and the proxy itself is calculated from Ah change, so the
+strong correlations do not demonstrate independent estimation accuracy.
+
+## Baseline model comparison
+
+The initial comparison script
+[`src/models/compare_panasonic_models.py`](../src/models/compare_panasonic_models.py)
+evaluates Ridge Regression, Random Forest, and Extra Trees with the same fixed
+whole-cycle split: seven training cycles (75,375 rows) and Cycle 2, Cycle 4,
+and LA92 held out (37,326 rows). Cycle 4 is included because its proxy has
+out-of-range values. Ridge fits its scaler on training data only; the tree
+models use raw features. `Ah` is excluded from model inputs.
+
+The results are in
+[`results/comparisons/model_comparison.csv`](../results/comparisons/model_comparison.csv),
+with split details in
+[`results/metrics/panasonic_model_comparison_metadata.json`](../results/metrics/panasonic_model_comparison_metadata.json).
+Overall held-out proxy-agreement metrics are:
+
+| Model | MAE (percentage points) | RMSE (percentage points) | R² |
+|---|---:|---:|---:|
+| Ridge Regression | 3.126 | 5.075 | 0.9700 |
+| Random Forest | 2.258 | 3.070 | 0.9890 |
+| Extra Trees | 3.222 | 4.309 | 0.9784 |
+
+Random Forest has the lowest error on this one split, but no final model has
+been selected. These results measure agreement with the approximate proxy
+only; they are not validated physical SoC accuracy, cell-to-cell
+generalization, or edge performance. The Cycle 4 proxy is not a true physical
+SoC label merely because it is included in the test split.
+
+## Model selection decision
+
+For Roadmap Phase 6, Random Forest is selected **provisionally for the
+optimization phase**. On the same fixed three-cycle holdout, it has the lowest
+aggregate MAE (2.258 percentage points) and RMSE (3.070 points) and highest
+R² (0.9890) of the three candidates. It also has the lowest MAE on each of
+Cycle 2, Cycle 4, and LA92. Its existing bounded configuration
+(`max_leaf_nodes=128`, 100 trees, `min_samples_leaf=2`) offers a concrete
+baseline to optimize.
+
+This is an engineering choice to focus the next experiment, not a final claim
+that Random Forest is universally best. The comparison holdout was used to
+choose among candidates, which makes its reported metrics selection evidence,
+not an independent final performance estimate. The selected artifact is
+refitted only on the seven comparison training cycles; the three holdout cycles
+remain excluded from fitting. The artifact and decision record are
+[`models/baseline/panasonic_soc_proxy_selected_rf.joblib`](../models/baseline/panasonic_soc_proxy_selected_rf.joblib)
+and
+[`results/metrics/panasonic_model_selection.json`](../results/metrics/panasonic_model_selection.json).
+All metrics remain proxy-agreement scores, not validated physical SoC
+accuracy.
+
 ## Source notes
 
 - Phillip Kollmeyer, *Panasonic 18650PF Li-ion Battery Data*, Mendeley Data,

@@ -1,0 +1,56 @@
+{
+  "source_dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz.csv",
+  "cleaned_dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz_clean.csv",
+  "scaled_dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz_scaled.csv",
+  "scaler_artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/results/metrics/panasonic_feature_scaler.json",
+  "rows_read": 112701,
+  "rows_written_cleaned": 112701,
+  "rows_written_scaled": 112701,
+  "rows_removed": 0,
+  "cleaning_policy": "Malformed, non-finite, non-monotonic, or duplicate-time rows are rejected with an explicit error; no sample is silently dropped.",
+  "checks": {
+    "required_columns_present": true,
+    "all_model_features_and_targets_finite": true,
+    "elapsed_time_monotonic_within_cycles": true,
+    "duplicate_cycle_time_keys": 0,
+    "input_feature_columns": [
+      "voltage_v",
+      "current_a",
+      "battery_temp_c",
+      "elapsed_time_s"
+    ],
+    "target_column": "soc_proxy_percent",
+    "target_values_clipped": false,
+    "out_of_range_proxy_rows_preserved": 506
+  },
+  "cycle_count": 10,
+  "train_cycle_ids": [
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+    "03-20-17_01.43 25degC_US06_Pan18650PF",
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+    "03-21-17_16.27 25degC_NN_Pan18650PF"
+  ],
+  "test_cycle_ids": [
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+    "03-21-17_09.38 25degC_LA92_Pan18650PF"
+  ],
+  "train_rows": 87470,
+  "test_rows": 25231,
+  "scaler_fit_on_train_only": true,
+  "scaler_fit_rows": 87470,
+  "sampling_interval_seconds": {
+    "minimum": 0.0950004905462265,
+    "median": 1.0000046342611313,
+    "maximum": 3.107999637722969,
+    "intended_period": 1.0,
+    "note": "The current builder selects logged observations near regular one-second targets; this is not exact interpolation, and gaps reflect the source logging schedule."
+  },
+  "scaler": "StandardScaler fitted on training rows only",
+  "target_status": "Approximate capacity-referenced coulomb-counting proxy; not validated physical SoC.",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}
