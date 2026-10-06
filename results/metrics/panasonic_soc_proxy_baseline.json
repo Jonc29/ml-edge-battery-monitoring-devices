@@ -1,0 +1,45 @@
+{
+  "dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz.csv",
+  "target": "soc_proxy_percent",
+  "target_status": "approximate_capacity_referenced_coulomb_counting_proxy",
+  "model": "RandomForestRegressor",
+  "model_parameters": {
+    "n_estimators": 100,
+    "min_samples_leaf": 2,
+    "max_leaf_nodes": 128,
+    "max_features": 1.0,
+    "random_state": 42
+  },
+  "input_features": [
+    "voltage_v",
+    "current_a",
+    "battery_temp_c",
+    "elapsed_time_s"
+  ],
+  "excluded_target_source_channel": "Ah",
+  "split_method": "GroupShuffleSplit by complete drive-cycle file",
+  "test_size_fraction": 0.2,
+  "train_cycle_ids": [
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+    "03-20-17_01.43 25degC_US06_Pan18650PF",
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+    "03-21-17_16.27 25degC_NN_Pan18650PF"
+  ],
+  "test_cycle_ids": [
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+    "03-21-17_09.38 25degC_LA92_Pan18650PF"
+  ],
+  "train_sample_count": 87470,
+  "test_sample_count": 25231,
+  "proxy_test_mae_percentage_points": 2.3180421305733656,
+  "proxy_test_rmse_percentage_points": 3.136159251260421,
+  "proxy_test_r2": 0.9875445494320132,
+  "interpretation": "These metrics describe held-out-cycle agreement with the derived proxy only. They are not validated SoC accuracy or multi-cell generalization.",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false,
+  "model_artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/models/baseline/panasonic_soc_proxy_rf.joblib"
+}

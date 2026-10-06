@@ -1,0 +1,84 @@
+{
+  "archive": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/raw/panasonic-18650pf-v1.zip",
+  "matlab_file_count": 198,
+  "file_row_observation_count": 8532692,
+  "observation_count_note": "Sum of per-file rows. The dataset readme documents duplicated drive-cycle records in contiguous and split files; this is not a unique-observation count.",
+  "archive_file_count_by_extension": {
+    ".csv": 59,
+    ".m": 1,
+    ".mat": 198,
+    ".txt": 1
+  },
+  "measurement_channels": [
+    "TimeStamp",
+    "Voltage",
+    "Current",
+    "Ah",
+    "Wh",
+    "Power",
+    "Battery_Temp_degC",
+    "Time",
+    "Chamber_Temp_degC"
+  ],
+  "aggregate_numeric_channel_ranges": {
+    "Voltage": {
+      "minimum": -0.00064,
+      "maximum": 4.32296
+    },
+    "Current": {
+      "minimum": -21.06144,
+      "maximum": 10.70564
+    },
+    "Ah": {
+      "minimum": -2.96774,
+      "maximum": 2.81395
+    },
+    "Wh": {
+      "minimum": -10.91538,
+      "maximum": 10.92685
+    },
+    "Power": {
+      "minimum": -63.40271813460001,
+      "maximum": 37.488449856
+    },
+    "Battery_Temp_degC": {
+      "minimum": -20.59468,
+      "maximum": 33.56611
+    },
+    "Time": {
+      "minimum": 0.0,
+      "maximum": 612060.6049954891
+    },
+    "Chamber_Temp_degC": {
+      "minimum": -24.0,
+      "maximum": 26.0
+    }
+  },
+  "groups": {
+    "-10degC/5 pulse test": 2,
+    "-10degC/Charges and Pauses": 14,
+    "-10degC/Drive Cycles": 10,
+    "-20degC Trise": 17,
+    "-20degC Trise with pause": 1,
+    "-20degC/5 pulse disch": 2,
+    "-20degC/Charges and Pauses": 11,
+    "-20degC/Drive cycles": 10,
+    "0degC/5 pulse": 2,
+    "0degC/Charges and Pauses": 19,
+    "0degC/Drive cycles": 10,
+    "10degC Trise": 16,
+    "10degC Trise with pause": 1,
+    "10degC/5 pulse test": 2,
+    "10degC/Charges and Pauses": 10,
+    "10degC/Drive Cycles": 10,
+    "Panasonic 18650PF Data/25degC/1C discharge tests_end_of_tests": 11,
+    "Panasonic 18650PF Data/25degC/5 pulse disch": 2,
+    "Panasonic 18650PF Data/25degC/C20 OCV and 1C discharge tests_start_of_tests": 13,
+    "Panasonic 18650PF Data/25degC/Charges and Pauses": 25,
+    "Panasonic 18650PF Data/25degC/Drive cycles": 10
+  },
+  "dataset_target_status": "No validated per-row SoC target has been established. Ah-based target reconstruction requires separate validation.",
+  "experiment_type": "public-dataset offline software exploration",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}
