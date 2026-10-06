@@ -34,6 +34,9 @@ and limitations before interpreting model scores.
 - Roadmap Phase 6 (model selection): Random Forest is selected provisionally
   for optimization based on the fixed-holdout proxy-agreement results. This is
   not validated physical SoC performance.
+- Roadmap Phase 7 (optimization): smaller Random Forest variants were measured
+  for proxy agreement and serialized file size. A 50-tree model is a
+  size-saving candidate for the next benchmarking phase.
 - Physical hardware testing and power measurement: not performed.
 
 See the [dataset candidate investigation](./reports/dataset-investigation.md)
@@ -253,6 +256,20 @@ artifact in `models/baseline/`. That artifact is refit on the comparison
 training cycles only; it does not train on the held-out cycles. Because the
 holdout informed selection, it is not an independent final performance
 estimate.
+
+Test smaller Random Forest variants against the selected baseline with:
+
+```bash
+python -m src.models.optimize_panasonic_rf
+```
+
+The experiment keeps the train/test cycles and random seed fixed, compares
+tree-count and leaf-count reductions, writes artifacts under
+`models/optimized/`, and records proxy metrics and serialized sizes in
+`results/comparisons/panasonic_rf_optimization.csv`. It measures artifact size
+only; latency and memory are part of roadmap Phase 8. The held-out cycles were
+used for model selection, so optimization results are exploratory and not an
+independent final evaluation.
 
 ## Reproducibility principles
 

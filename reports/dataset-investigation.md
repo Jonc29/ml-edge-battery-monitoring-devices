@@ -303,6 +303,37 @@ and
 All metrics remain proxy-agreement scores, not validated physical SoC
 accuracy.
 
+## Random Forest optimization trade-off
+
+For Roadmap Phase 7, four smaller Random Forest variants were trained using the
+same seven training cycles, three held-out cycles, features, random seed, and
+minimum leaf size as the selected baseline. Tree count and maximum leaf nodes
+were reduced; model artifact sizes are actual uncompressed `joblib` file sizes.
+The detailed per-cycle results and model paths are in
+[`results/comparisons/panasonic_rf_optimization.csv`](../results/comparisons/panasonic_rf_optimization.csv);
+run configuration and limitations are in
+[`results/metrics/panasonic_rf_optimization.json`](../results/metrics/panasonic_rf_optimization.json).
+
+| Variant | Trees | Max leaf nodes | MAE (proxy points) | RMSE (proxy points) | Artifact size | Size reduction | MAE increase vs baseline |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Selected baseline | 100 | 128 | 2.258 | 3.070 | 1,868,529 bytes | — | — |
+| `rf_50_trees` | 50 | 128 | 2.295 | 3.112 | 934,929 bytes | 50.0% | +0.037 |
+| `rf_100_64_leaves` | 100 | 64 | 2.681 | 3.626 | 946,929 bytes | 49.3% | +0.423 |
+| `rf_50_64` | 50 | 64 | 2.719 | 3.673 | 474,129 bytes | 74.6% | +0.461 |
+| `rf_25_32` | 25 | 32 | 3.470 | 4.636 | 122,529 bytes | 93.4% | +1.212 |
+
+The 50-tree/128-leaf candidate halves serialized size while increasing pooled
+held-out proxy MAE by only 0.037 percentage points in this run. It also has
+lower MAE than the other reduced-size variants. This makes it a useful
+**candidate for Phase 8 benchmarks**, not a replacement claimed to be better:
+latency and memory have not yet been measured. The 25-tree/32-leaf version
+provides a more aggressive size reduction but a larger proxy-error increase.
+
+These comparisons reuse the holdout that informed Phase 6 model selection.
+Therefore, results quantify an exploratory accuracy/size trade-off against the
+derived proxy, not an independent final test, physical SoC accuracy, hardware
+latency, memory consumption, or device power.
+
 ## Source notes
 
 - Phillip Kollmeyer, *Panasonic 18650PF Li-ion Battery Data*, Mendeley Data,

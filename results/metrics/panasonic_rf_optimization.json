@@ -1,0 +1,36 @@
+{
+  "dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz.csv",
+  "target_status": "approximate_capacity_referenced_coulomb_counting_proxy",
+  "input_features": [
+    "voltage_v",
+    "current_a",
+    "battery_temp_c",
+    "elapsed_time_s"
+  ],
+  "excluded_target_source_channel": "Ah",
+  "split_method": "same fixed complete-cycle split as model comparison",
+  "train_cycle_ids": [
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+    "03-20-17_01.43 25degC_US06_Pan18650PF",
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+    "03-21-17_16.27 25degC_NN_Pan18650PF"
+  ],
+  "test_cycle_ids": [
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+    "03-21-17_09.38 25degC_LA92_Pan18650PF"
+  ],
+  "train_sample_count": 75375,
+  "test_sample_count": 37326,
+  "baseline_artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/models/baseline/panasonic_soc_proxy_selected_rf.joblib",
+  "baseline_artifact_size_bytes": 1868529,
+  "serialization": "joblib.dump with default compression (uncompressed)",
+  "optimization_strategy": "Reduce tree count, maximum leaf nodes, or both while keeping random seed, minimum leaf size, and feature settings constant.",
+  "metrics": "Proxy MAE/RMSE/R2 and exact serialized artifact file size. Latency and memory are reserved for roadmap phase 8.",
+  "interpretation": "All scores compare predictions with an approximate proxy. The fixed test cycles informed model selection and are reused here for optimization, so these are exploratory trade-off results, not an independent final evaluation.",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}
