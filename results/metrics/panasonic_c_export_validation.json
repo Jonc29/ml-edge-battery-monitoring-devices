@@ -1,0 +1,90 @@
+{
+  "generated_at_utc": "2026-10-06T16:39:02.228414+00:00",
+  "export_format": "standalone C99 headers",
+  "compiler": "/usr/bin/cc",
+  "compiler_flags": [
+    "-std=c99",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror"
+  ],
+  "feature_order": [
+    "voltage_v",
+    "current_a",
+    "battery_temp_c",
+    "elapsed_time_s"
+  ],
+  "input_type": "float32",
+  "output_type": "double; approximate proxy percentage units",
+  "target_status": "approximate_capacity_referenced_coulomb_counting_proxy",
+  "split_method": "fixed complete-cycle holdout",
+  "train_cycle_ids": [
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+    "03-20-17_01.43 25degC_US06_Pan18650PF",
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+    "03-21-17_16.27 25degC_NN_Pan18650PF"
+  ],
+  "test_cycle_ids": [
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+    "03-21-17_09.38 25degC_LA92_Pan18650PF"
+  ],
+  "validation": {
+    "method": "Compiled C99 harness compared each generated prediction with the matching scikit-learn artifact over every held-out row.",
+    "passed": true,
+    "models": {
+      "selected_baseline_100_trees": {
+        "sample_count": 37326,
+        "maximum_absolute_error": 4.263256414560601e-14,
+        "mean_absolute_error": 3.97205591451757e-15,
+        "absolute_tolerance": 1e-09,
+        "passed": true
+      },
+      "optimized_candidate_50_trees": {
+        "sample_count": 37326,
+        "maximum_absolute_error": 4.263256414560601e-14,
+        "mean_absolute_error": 4.257883465753649e-15,
+        "absolute_tolerance": 1e-09,
+        "passed": true
+      }
+    }
+  },
+  "models": {
+    "selected_baseline_100_trees": {
+      "artifact_role": "provisional_selected_baseline",
+      "source_artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/models/baseline/panasonic_soc_proxy_selected_rf.joblib",
+      "source_artifact_sha256": "205238e69c3c8195e7480479e82aed38137f7f880efd399060bfe088a119632f",
+      "source_artifact_size_bytes": 1868529,
+      "header": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/edge/exported/panasonic_soc_proxy_selected_rf.h",
+      "function": "panasonic_soc_proxy_selected_rf_predict",
+      "header_size_bytes": 1210081,
+      "tree_count": 100,
+      "node_count": 25500,
+      "feature_count": 4
+    },
+    "optimized_candidate_50_trees": {
+      "artifact_role": "size_optimized_candidate_not_selected",
+      "source_artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/models/optimized/panasonic_rf_50_trees.joblib",
+      "source_artifact_sha256": "7adae594386897b721398ea822db2a90583f144d28228da8577c5601903656a0",
+      "source_artifact_size_bytes": 934929,
+      "header": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/edge/exported/panasonic_soc_proxy_rf_50_trees.h",
+      "function": "panasonic_soc_proxy_rf_50_trees_predict",
+      "header_size_bytes": 606478,
+      "tree_count": 50,
+      "node_count": 12750,
+      "feature_count": 4
+    }
+  },
+  "limitations": [
+    "The target is a capacity-referenced coulomb-counting proxy, not validated physical SoC.",
+    "The held-out cycles were previously used for model selection and optimization; parity validation is not an independent model evaluation.",
+    "C headers contain model parameters only. They do not implement sensor drivers, filtering, SoC initialization, charge integration, or hardware-specific memory/power handling.",
+    "The 50-tree model remains an optimization candidate and is not promoted over the provisionally selected baseline by this export."
+  ],
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}

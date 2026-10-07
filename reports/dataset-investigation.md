@@ -326,13 +326,143 @@ The 50-tree/128-leaf candidate halves serialized size while increasing pooled
 held-out proxy MAE by only 0.037 percentage points in this run. It also has
 lower MAE than the other reduced-size variants. This makes it a useful
 **candidate for Phase 8 benchmarks**, not a replacement claimed to be better:
-latency and memory have not yet been measured. The 25-tree/32-leaf version
+latency and process RSS have since been measured as described in the Phase 8
+section below. The 25-tree/32-leaf version
 provides a more aggressive size reduction but a larger proxy-error increase.
 
 These comparisons reuse the holdout that informed Phase 6 model selection.
 Therefore, results quantify an exploratory accuracy/size trade-off against the
 derived proxy, not an independent final test, physical SoC accuracy, hardware
 latency, memory consumption, or device power.
+
+## Host-side resource benchmark
+
+Roadmap Phase 8 benchmarks the selected 100-tree Random Forest and the
+50-tree/128-leaf candidate using the same fixed held-out cycles and feature
+order. Each model ran in a fresh Python subprocess. The benchmark warms up the
+estimator, times `model.predict` only, and samples Linux `/proc/self/status`
+RSS around dataset loading, model loading, and inference. The saved estimators
+retain their configured `n_jobs=-1`.
+
+The measured host was an Intel Core i5-4210U at 1.70 GHz with 4 logical CPUs,
+Python 3.10.20, NumPy 2.2.5, scikit-learn 1.7.2, and joblib 1.5.3. Results from
+this run are:
+
+| Model | Artifact bytes | Batch 1 median / p95 (ms) | Batch 32 median / p95 (ms) | Batch 256 median / p95 (ms) | RSS change during model load (bytes) |
+|---|---:|---:|---:|---:|---:|
+| Selected baseline (100 trees) | 1,868,529 | 39.010 / 65.802 | 38.688 / 63.085 | 47.722 / 63.086 | 102,400 |
+| Candidate (50 trees) | 934,929 | 43.050 / 82.758 | 24.912 / 36.711 | 25.338 / 40.028 | 163,840 |
+
+The 50-tree model is half the serialized size. Its measured median latency is
+lower at batch sizes 32 and 256 in this run, but higher for single-row
+inference; the broad tail timings and single-run variation mean this does not
+establish a stable latency benefit. Repeat paired measurements and investigate
+the saved `n_jobs=-1` inference setting before drawing a deployment conclusion.
+
+The process high-water RSS was about 300.9 MB for the baseline worker and
+301.1 MB for the candidate worker. These numbers include Python, NumPy,
+scikit-learn, loaded test data, and runtime allocations. The observed model-load
+RSS changes are process snapshots, not a direct measurement of model-only RAM;
+the high-water mark may also be dominated by loading the CSV and can miss brief
+peaks. They must not be presented as embedded-device memory requirements.
+
+Machine-readable per-batch latency percentiles, current/high-water RSS
+snapshots, host metadata, and measurement qualifications are saved in
+[`results/metrics/panasonic_resource_benchmarks.json`](../results/metrics/panasonic_resource_benchmarks.json)
+and
+[`results/comparisons/panasonic_resource_benchmarks.csv`](../results/comparisons/panasonic_resource_benchmarks.csv).
+This is a host-software benchmark only: no physical edge hardware or power
+measurement was used. The same model-selection holdout was reused, so all
+conclusions remain exploratory and proxy-specific.
+
+## C99 edge export
+
+Roadmap Phase 9 exports both the provisionally selected 100-tree baseline and
+the 50-tree size-reduction candidate. Each standalone header stores tree
+features, thresholds, children, and leaf values as read-only C arrays and
+exposes a prediction function. Inputs are `float` values in the exact model
+feature order—voltage (V), current (A), battery temperature (°C), and elapsed
+time (s)—and output is a `double` in approximate proxy percentage units. The
+export does not clip out-of-range estimates.
+
+The headers were compiled using `cc -std=c99 -O2 -Wall -Wextra -Werror`.
+Predictions from the compiled C functions were compared with their matching
+scikit-learn artifacts over every one of the **37,326** held-out samples. For
+each forest the maximum absolute difference was **4.26e-14** proxy percentage
+points, below the 1e-9 tolerance. The baseline header contains 100 trees and
+25,500 nodes (1,210,081 bytes); the candidate contains 50 trees and 12,750
+nodes (606,478 bytes). The generated header sizes differ from the serialized
+joblib artifact sizes; C array source text is not a measure of embedded RAM or
+flash after a particular compiler/linker build.
+
+The exports are available as
+[`edge/exported/panasonic_soc_proxy_selected_rf.h`](../edge/exported/panasonic_soc_proxy_selected_rf.h)
+and
+[`edge/exported/panasonic_soc_proxy_rf_50_trees.h`](../edge/exported/panasonic_soc_proxy_rf_50_trees.h).
+The C/Python parity results and split provenance are in
+[`results/metrics/panasonic_c_export_validation.json`](../results/metrics/panasonic_c_export_validation.json).
+The 50-tree model remains a candidate, not a replacement selected by this
+export. Matching software predictions confirms the translation of the saved
+estimators; it does not validate the approximate target as physical SoC, test
+real sensors or firmware, or demonstrate hardware memory, latency, or power.
+
+## Host-side edge inference simulation
+
+Roadmap Phase 10 adds
+[`edge/simulation/panasonic_edge_simulator.c`](../edge/simulation/panasonic_edge_simulator.c),
+a C99 program that links either exported header at runtime selection. It accepts
+one CSV record per input line with the exact four model features and emits
+`sample_index,model,soc_proxy_percent` CSV output. The default uses the
+provisionally selected 100-tree model; `--model candidate` uses the 50-tree
+optimization candidate. Input records must contain exactly four finite numeric
+values; malformed and non-finite rows produce an error and nonzero exit status.
+
+The simulator compiled successfully with
+`cc -std=c99 -O2 -Wall -Wextra -Werror`. Its selected and candidate outputs were
+compared with their matching saved Python estimators for representative
+float32 inputs, and both matched within 1e-9 proxy percentage points. The
+focused Phase 10 tests also verify malformed-input and unknown-model handling.
+See the
+[`tests/test_panasonic_edge_simulator.py`](../tests/test_panasonic_edge_simulator.py)
+test for the repeatable compiled parity check.
+
+This is a **host-side inference simulation**, not firmware. It does not acquire
+serial data from a physical device, read sensors, establish initial SoC, perform
+charge integration, or measure device memory or power. The output is still
+agreement with an approximate capacity-referenced proxy and must not be
+interpreted as validated physical SoC.
+
+## Leave-one-cycle-out robustness evaluation
+
+Roadmap Phase 11 fits each of the three compared model families ten times,
+holding out one complete 25 °C drive-cycle run in each fold. This produces one
+out-of-fold prediction for every prepared row (112,701 total) without dividing
+rows from the same cycle between training and testing. Ridge scaling is
+contained in its pipeline and is fitted anew using only the training cycles in
+each fold. Pooled metrics and unweighted per-cycle means are reported separately
+because cycle lengths differ.
+
+| Model | Pooled proxy MAE (percentage points) | Pooled proxy RMSE (percentage points) | Pooled R² |
+|---|---:|---:|---:|
+| Ridge Regression | 4.008 | 5.870 | 0.9570 |
+| Random Forest (100 trees) | 3.111 | 4.680 | 0.9727 |
+| Extra Trees (100 trees) | 4.523 | 6.873 | 0.9410 |
+
+The Random Forest had the lowest pooled proxy MAE and RMSE among these fixed
+model configurations. Its worst per-cycle MAE was on UDDS. This evaluation
+supplements the prior fixed holdout; it does not replace it with an independent
+confirmatory result. All ten cycles have already informed earlier model
+selection and optimization. The experiment also remains limited to one cell,
+one ambient temperature, and the approximate capacity-referenced target.
+Results measure proxy agreement, not validated physical SoC accuracy.
+
+Per-cycle metrics and fold membership are in
+[`results/comparisons/panasonic_leave_one_cycle_out.csv`](../results/comparisons/panasonic_leave_one_cycle_out.csv);
+pooled/unweighted summary metrics and the evaluation caveat are in
+[`results/metrics/panasonic_leave_one_cycle_out.json`](../results/metrics/panasonic_leave_one_cycle_out.json).
+The implementation and regression tests are in
+[`src/evaluation/evaluate_panasonic_cycle_cv.py`](../src/evaluation/evaluate_panasonic_cycle_cv.py)
+and [`tests/test_panasonic_cycle_cv.py`](../tests/test_panasonic_cycle_cv.py).
 
 ## Source notes
 

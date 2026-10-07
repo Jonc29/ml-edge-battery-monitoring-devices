@@ -35,8 +35,26 @@ and limitations before interpreting model scores.
   for optimization based on the fixed-holdout proxy-agreement results. This is
   not validated physical SoC performance.
 - Roadmap Phase 7 (optimization): smaller Random Forest variants were measured
-  for proxy agreement and serialized file size. A 50-tree model is a
-  size-saving candidate for the next benchmarking phase.
+  for proxy agreement and serialized file size. The 50-tree model is half the
+  baseline artifact size and has been benchmarked in Phase 8.
+- Roadmap Phase 8 (resource benchmarking): the selected 100-tree model and
+  50-tree candidate have host-side latency, serialized-size, and process-RSS
+  measurements. These are software measurements, not physical edge-device
+  results; the single-row timing is noisy on this host.
+- Roadmap Phase 9 (C export): standalone C99 headers were generated for the
+  selected baseline and the 50-tree optimization candidate. Compiled C
+  predictions matched Python on all 37,326 held-out samples within 4.26e-14
+  proxy percentage points.
+- Roadmap Phase 10 (edge simulation): a host-compiled C program accepts
+  serial-style CSV feature rows and returns proxy predictions for either
+  exported forest. The simulator is not firmware and has not run on a physical
+  edge device.
+- Roadmap Phase 11 (cycle robustness evaluation): leave-one-complete-cycle-out
+  comparisons evaluate each of the ten cycles once with all rows from that
+  cycle held out. This is a supplementary proxy-robustness analysis, not an
+  independent confirmatory test, because these cycles informed prior model
+  selection and optimization. Pooled proxy MAE was 3.111 percentage points for
+  Random Forest, 4.008 for Ridge Regression, and 4.523 for Extra Trees.
 - Physical hardware testing and power measurement: not performed.
 
 See the [dataset candidate investigation](./reports/dataset-investigation.md)
@@ -270,6 +288,103 @@ tree-count and leaf-count reductions, writes artifacts under
 only; latency and memory are part of roadmap Phase 8. The held-out cycles were
 used for model selection, so optimization results are exploratory and not an
 independent final evaluation.
+
+Benchmark the selected model and the 50-tree candidate for inference latency,
+artifact size, and process memory with:
+
+```bash
+python -m src.evaluation.benchmark_panasonic_models
+```
+
+The script uses identical held-out-cycle inputs, times only `model.predict`,
+and reports median, p95, and p99 latency for batch sizes 1, 32, and 256 after
+warm-up calls. It runs each model in a fresh process, records the host and
+software versions, and measures Linux process RSS before/after dataset loading,
+model loading, and inference. Outputs are
+`results/metrics/panasonic_resource_benchmarks.json` and
+`results/comparisons/panasonic_resource_benchmarks.csv`. Existing outputs are
+not replaced unless `--overwrite` is passed. RSS includes the Python and
+scientific-computing runtime and test data; it is not model-only RAM. Host
+latency and RSS do not establish microcontroller performance or power use.
+
+Export both Random Forest artifacts as standalone C99 headers and validate
+them against the Python estimators with:
+
+```bash
+python -m src.evaluation.export_panasonic_forest_c
+```
+
+The command requires the prepared proxy dataset, saved model artifacts,
+comparison metadata, and a C99 compiler available as `cc` (override with
+`--compiler`). It compiles a temporary validation harness, compares C and
+scikit-learn predictions for all held-out rows, then writes
+`edge/exported/panasonic_soc_proxy_selected_rf.h`,
+`edge/exported/panasonic_soc_proxy_rf_50_trees.h`, and
+`results/metrics/panasonic_c_export_validation.json`. Existing outputs are
+preserved unless `--overwrite` is passed. Both headers expect four `float`
+inputs in the order voltage (V), current (A), battery temperature (°C), and
+elapsed time (s), and return an approximate proxy percentage as `double`.
+They contain inference parameters only—not sensor drivers, target validation,
+firmware, or hardware-specific memory/power handling.
+
+Run the host-side edge inference simulation with:
+
+```bash
+mkdir -p build
+cc -std=c99 -O2 -Wall -Wextra -Werror \
+  edge/simulation/panasonic_edge_simulator.c -lm \
+  -o build/panasonic_edge_simulator
+printf '3.9,-0.5,25.3,120\n3.7,-1.1,26.1,900\n' \
+  | build/panasonic_edge_simulator --model selected
+```
+
+The simulator reads one four-number CSV record per input line in the header's
+feature order: voltage (V), current (A), battery temperature (°C), and elapsed
+time (s). It writes `sample_index,model,soc_proxy_percent` rows to standard
+output. Use `--model candidate` for the 50-tree model; `selected` is the
+default. Malformed or non-finite rows fail explicitly. This demonstrates the
+exported inference function and a serial-like text interface on the
+development computer only. It does not implement a serial driver, sensors,
+state initialization, charge integration, microcontroller firmware, or power
+measurement.
+
+Run the supplementary leave-one-cycle-out evaluation for all three model
+families with:
+
+```bash
+python -m src.evaluation.evaluate_panasonic_cycle_cv
+```
+
+The script fits each model on all but one complete cycle, repeats this for each
+cycle, and reports pooled out-of-fold metrics and per-cycle metrics. Results
+are written to `results/comparisons/panasonic_leave_one_cycle_out.csv` and
+`results/metrics/panasonic_leave_one_cycle_out.json`; existing outputs are
+preserved unless `--overwrite` is passed. This remains proxy-agreement evidence
+for one cell at 25 °C. Since these same cycles have already informed prior
+model selection and optimization, this repeated grouped evaluation is not an
+independent confirmatory test.
+
+## Local research dashboard
+
+Activate the project Conda environment, then run the Streamlit dashboard from
+the repository root:
+
+```bash
+conda activate ml_env
+python -m streamlit run src/ui/app.py
+```
+
+The dashboard reads the existing prepared Panasonic dataset, model artifacts,
+and experiment result files; it does not retrain models or change the research
+pipeline. Its prediction page supports both replaying a recorded dataset sample
+and entering four explicit model inputs in the order voltage (V), current (A),
+battery temperature (°C), and elapsed time (s).
+
+The application is **Offline Simulation** only. Dataset signals are not live
+sensor readings, the prediction target is a derived SoC proxy rather than
+validated physical SoC, and software resource measurements are not physical
+power measurements. The dashboard reports missing required local artifacts
+instead of substituting example or synthetic values.
 
 ## Reproducibility principles
 

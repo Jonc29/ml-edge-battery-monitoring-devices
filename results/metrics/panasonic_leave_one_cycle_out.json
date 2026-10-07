@@ -1,0 +1,95 @@
+{
+  "dataset": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/data/processed/panasonic_soc_proxy_25c_1hz.csv",
+  "target": "soc_proxy_percent",
+  "target_status": "approximate_capacity_referenced_coulomb_counting_proxy",
+  "input_features": [
+    "voltage_v",
+    "current_a",
+    "battery_temp_c",
+    "elapsed_time_s"
+  ],
+  "split_method": "leave-one-complete-cycle-out",
+  "cycle_count": 10,
+  "fold_count": 10,
+  "sample_count": 112701,
+  "cycle_ids": [
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+    "03-20-17_01.43 25degC_US06_Pan18650PF",
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+    "03-21-17_09.38 25degC_LA92_Pan18650PF",
+    "03-21-17_16.27 25degC_NN_Pan18650PF"
+  ],
+  "aggregation": "Pooled metrics combine every out-of-fold sample. Unweighted cycle means weight each cycle equally and are reported separately.",
+  "models": {
+    "RidgeRegression": {
+      "out_of_fold_sample_count": 112701,
+      "pooled_out_of_fold_metrics": {
+        "mae_percentage_points": 4.007620524732875,
+        "rmse_percentage_points": 5.870391251241315,
+        "r2": 0.9569799672132809
+      },
+      "unweighted_cycle_mean_metrics": {
+        "mae_percentage_points": 3.5721233021531296,
+        "rmse_percentage_points": 5.138316958622685,
+        "r2": 0.9643848960295731
+      },
+      "worst_cycle_by_mae": "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+      "model_parameters": {
+        "alpha": 1.0,
+        "scaler": "StandardScaler fitted on train only"
+      }
+    },
+    "RandomForestRegressor": {
+      "out_of_fold_sample_count": 112701,
+      "pooled_out_of_fold_metrics": {
+        "mae_percentage_points": 3.110561984048129,
+        "rmse_percentage_points": 4.680133493331981,
+        "r2": 0.9726565616818151
+      },
+      "unweighted_cycle_mean_metrics": {
+        "mae_percentage_points": 2.8497003734771242,
+        "rmse_percentage_points": 3.776130195108595,
+        "r2": 0.9768413733839003
+      },
+      "worst_cycle_by_mae": "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+      "model_parameters": {
+        "n_estimators": 100,
+        "min_samples_leaf": 2,
+        "max_leaf_nodes": 128,
+        "max_features": 1.0,
+        "random_state": 42,
+        "n_jobs": -1
+      }
+    },
+    "ExtraTreesRegressor": {
+      "out_of_fold_sample_count": 112701,
+      "pooled_out_of_fold_metrics": {
+        "mae_percentage_points": 4.522780491425346,
+        "rmse_percentage_points": 6.872834723818415,
+        "r2": 0.9410330801161286
+      },
+      "unweighted_cycle_mean_metrics": {
+        "mae_percentage_points": 4.256404099439857,
+        "rmse_percentage_points": 5.286676803969987,
+        "r2": 0.9427856809171062
+      },
+      "worst_cycle_by_mae": "03-20-17_01.43 25degC_US06_Pan18650PF",
+      "model_parameters": {
+        "n_estimators": 100,
+        "min_samples_leaf": 2,
+        "max_leaf_nodes": 128,
+        "max_features": 1.0,
+        "random_state": 42,
+        "n_jobs": -1
+      }
+    }
+  },
+  "interpretation": "All metrics measure agreement with the derived proxy, not validated physical SoC. The cycles in this dataset have already informed earlier model selection and optimization; this repeated grouped evaluation is a robustness analysis, not an independent confirmatory test. It covers one cell at 25 degrees C only.",
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}

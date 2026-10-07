@@ -1,0 +1,218 @@
+{
+  "benchmark_timestamp_utc": "2026-10-06T16:28:10.956310+00:00",
+  "benchmark_type": "host-side software inference; not physical edge hardware",
+  "host": {
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "processor": "Intel(R) Core(TM) i5-4210U CPU @ 1.70GHz",
+    "logical_cpu_count": 4,
+    "python_version": "3.10.20",
+    "numpy_version": "2.2.5",
+    "scikit_learn_version": "1.7.2",
+    "joblib_version": "1.5.3"
+  },
+  "target_status": "approximate_capacity_referenced_coulomb_counting_proxy",
+  "split_method": "fixed complete-cycle holdout",
+  "train_cycle_ids": [
+    "03-18-17_02.17 25degC_Cycle_1_Pan18650PF",
+    "03-19-17_09.07 25degC_Cycle_3_Pan18650PF",
+    "03-20-17_01.43 25degC_US06_Pan18650PF",
+    "03-20-17_05.56 25degC_HWFTa_Pan18650PF",
+    "03-20-17_19.27 25degC_HWFTb_Pan18650PF",
+    "03-21-17_00.29 25degC_UDDS_Pan18650PF",
+    "03-21-17_16.27 25degC_NN_Pan18650PF"
+  ],
+  "test_cycle_ids": [
+    "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+    "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+    "03-21-17_09.38 25degC_LA92_Pan18650PF"
+  ],
+  "feature_order": [
+    "voltage_v",
+    "current_a",
+    "battery_temp_c",
+    "elapsed_time_s"
+  ],
+  "latency_method": "perf_counter_ns around model.predict only; data batches are prepared before timing. Each model runs in a fresh subprocess. Results include 50/20/10 warm-up calls and 500/200/100 measured calls for batch sizes 1/32/256; report median, p95, and p99.",
+  "memory_method": "Linux process VmRSS and VmHWM from /proc/self/status in the isolated worker. Current RSS is sampled before/after reading the test data, after model load, and after prediction. Values include Python, NumPy, scikit-learn, test data, and runtime overhead and are not exact model-only memory.",
+  "artifact_size_method": "Exact on-disk file size in bytes for the existing joblib files; no additional compression is applied.",
+  "selection_holdout_caveat": "The held-out cycles were used during model selection and the optimization comparison; this is exploratory resource characterization, not an independent final evaluation.",
+  "results": [
+    {
+      "model": "selected_baseline_100_trees",
+      "artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/models/baseline/panasonic_soc_proxy_selected_rf.joblib",
+      "artifact_size_bytes": 1868529,
+      "held_out_sample_count": 37326,
+      "test_cycle_ids": [
+        "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+        "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+        "03-21-17_09.38 25degC_LA92_Pan18650PF"
+      ],
+      "feature_order": [
+        "voltage_v",
+        "current_a",
+        "battery_temp_c",
+        "elapsed_time_s"
+      ],
+      "latency": [
+        {
+          "batch_size": 1,
+          "warmup_calls": 50,
+          "measured_calls": 500,
+          "latency_median_ms_per_batch": 39.0103105,
+          "latency_p95_ms_per_batch": 65.80175295,
+          "latency_p99_ms_per_batch": 79.88538452999998,
+          "latency_mean_ms_per_batch": 43.505073914,
+          "median_latency_us_per_sample": 39010.3105,
+          "median_throughput_samples_per_second": 25.634248668694905
+        },
+        {
+          "batch_size": 32,
+          "warmup_calls": 20,
+          "measured_calls": 200,
+          "latency_median_ms_per_batch": 38.688257500000006,
+          "latency_p95_ms_per_batch": 63.08496924999999,
+          "latency_p99_ms_per_batch": 78.81260164999993,
+          "latency_mean_ms_per_batch": 42.406179484999996,
+          "median_latency_us_per_sample": 1209.0080468750002,
+          "median_throughput_samples_per_second": 827.1243542048901
+        },
+        {
+          "batch_size": 256,
+          "warmup_calls": 10,
+          "measured_calls": 100,
+          "latency_median_ms_per_batch": 47.722471,
+          "latency_p95_ms_per_batch": 63.0861213,
+          "latency_p99_ms_per_batch": 66.35122018000001,
+          "latency_mean_ms_per_batch": 47.9103323,
+          "median_latency_us_per_sample": 186.41590234375,
+          "median_throughput_samples_per_second": 5364.349218212108
+        }
+      ],
+      "memory": {
+        "method": "Linux /proc/self/status current VmRSS and VmHWM, sampled in an isolated subprocess after loading the test data and again after model load/inference.",
+        "rss_before_dataset_load_bytes": 216952832,
+        "rss_after_dataset_load_bytes": 261132288,
+        "rss_after_model_load_bytes": 261234688,
+        "rss_after_inference_bytes": 261922816,
+        "rss_change_during_dataset_load_bytes": 44179456,
+        "rss_change_during_model_load_bytes": 102400,
+        "rss_high_water_before_dataset_load_bytes": 216952832,
+        "rss_high_water_after_dataset_load_bytes": 300896256,
+        "rss_high_water_after_model_load_bytes": 300896256,
+        "rss_high_water_after_inference_bytes": 300896256,
+        "rss_high_water_bytes": 300896256,
+        "rss_high_water_change_during_model_load_bytes": 0,
+        "interpretation": "Process RSS is a host-side memory indicator, not exact model RAM usage. Dataset/model deltas include runtime allocations and may be negative as pages are released; the high-water change can miss short-lived peaks."
+      },
+      "prediction_checks": [
+        {
+          "batch_size": 1,
+          "finite_predictions": true,
+          "last_prediction_count": 1
+        },
+        {
+          "batch_size": 32,
+          "finite_predictions": true,
+          "last_prediction_count": 32
+        },
+        {
+          "batch_size": 256,
+          "finite_predictions": true,
+          "last_prediction_count": 256
+        }
+      ],
+      "physical_hardware_tested": false,
+      "physical_power_measured": false
+    },
+    {
+      "model": "optimized_candidate_50_trees",
+      "artifact": "/home/oninils/ML EDGE BATTERY MONITORING DEVICES/models/optimized/panasonic_rf_50_trees.joblib",
+      "artifact_size_bytes": 934929,
+      "held_out_sample_count": 37326,
+      "test_cycle_ids": [
+        "03-19-17_03.25 25degC_Cycle_2_Pan18650PF",
+        "03-19-17_14.31 25degC_Cycle_4_Pan18650PF",
+        "03-21-17_09.38 25degC_LA92_Pan18650PF"
+      ],
+      "feature_order": [
+        "voltage_v",
+        "current_a",
+        "battery_temp_c",
+        "elapsed_time_s"
+      ],
+      "latency": [
+        {
+          "batch_size": 1,
+          "warmup_calls": 50,
+          "measured_calls": 500,
+          "latency_median_ms_per_batch": 43.0496255,
+          "latency_p95_ms_per_batch": 82.75811474999995,
+          "latency_p99_ms_per_batch": 121.06792755999994,
+          "latency_mean_ms_per_batch": 46.426602339999995,
+          "median_latency_us_per_sample": 43049.625499999995,
+          "median_throughput_samples_per_second": 23.2290057900736
+        },
+        {
+          "batch_size": 32,
+          "warmup_calls": 20,
+          "measured_calls": 200,
+          "latency_median_ms_per_batch": 24.911861,
+          "latency_p95_ms_per_batch": 36.710718849999985,
+          "latency_p99_ms_per_batch": 42.05262618999999,
+          "latency_mean_ms_per_batch": 24.267017905000003,
+          "median_latency_us_per_sample": 778.4956562499999,
+          "median_throughput_samples_per_second": 1284.528682943438
+        },
+        {
+          "batch_size": 256,
+          "warmup_calls": 10,
+          "measured_calls": 100,
+          "latency_median_ms_per_batch": 25.337843499999998,
+          "latency_p95_ms_per_batch": 40.027585599999995,
+          "latency_p99_ms_per_batch": 45.51115310000001,
+          "latency_mean_ms_per_batch": 27.402439939999994,
+          "median_latency_us_per_sample": 98.975951171875,
+          "median_throughput_samples_per_second": 10103.464408879154
+        }
+      ],
+      "memory": {
+        "method": "Linux /proc/self/status current VmRSS and VmHWM, sampled in an isolated subprocess after loading the test data and again after model load/inference.",
+        "rss_before_dataset_load_bytes": 217546752,
+        "rss_after_dataset_load_bytes": 261652480,
+        "rss_after_model_load_bytes": 261816320,
+        "rss_after_inference_bytes": 262483968,
+        "rss_change_during_dataset_load_bytes": 44105728,
+        "rss_change_during_model_load_bytes": 163840,
+        "rss_high_water_before_dataset_load_bytes": 217546752,
+        "rss_high_water_after_dataset_load_bytes": 301068288,
+        "rss_high_water_after_model_load_bytes": 301068288,
+        "rss_high_water_after_inference_bytes": 301068288,
+        "rss_high_water_bytes": 301068288,
+        "rss_high_water_change_during_model_load_bytes": 0,
+        "interpretation": "Process RSS is a host-side memory indicator, not exact model RAM usage. Dataset/model deltas include runtime allocations and may be negative as pages are released; the high-water change can miss short-lived peaks."
+      },
+      "prediction_checks": [
+        {
+          "batch_size": 1,
+          "finite_predictions": true,
+          "last_prediction_count": 1
+        },
+        {
+          "batch_size": 32,
+          "finite_predictions": true,
+          "last_prediction_count": 32
+        },
+        {
+          "batch_size": 256,
+          "finite_predictions": true,
+          "last_prediction_count": 256
+        }
+      ],
+      "physical_hardware_tested": false,
+      "physical_power_measured": false
+    }
+  ],
+  "physical_hardware_tested": false,
+  "physical_power_measured": false
+}
