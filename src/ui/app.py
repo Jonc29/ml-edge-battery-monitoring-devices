@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from html import escape
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -14,15 +15,10 @@ from src.ui import data
 from src.ui.service import load_saved_model, predict_soc_proxy
 
 PAGE_NAMES = (
-    "Dashboard",
-    "Battery Monitoring",
-    "ML Prediction",
-    "Model Comparison",
-    "Model Optimization",
-    "Performance",
-    "Dataset",
-    "Edge Deployment",
-    "System Information",
+    "Overview",
+    "Recorded signals",
+    "Try an estimate",
+    "Project details",
 )
 REQUIRED_FILES = (
     data.PROXY_DATASET,
@@ -40,7 +36,7 @@ REQUIRED_FILES = (
 )
 
 st.set_page_config(
-    page_title="Battery Intelligence | Edge ML",
+    page_title="Battery Monitor | Project Demo",
     page_icon="🔋",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -49,22 +45,66 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-      .stApp { background: #f4f7fb; color: #17263c; }
-      [data-testid="stSidebar"] { background: #122238; }
-      [data-testid="stSidebar"] * { color: #eaf1f8; }
+      .stApp { background: #101013; color: #f5f7f8; }
+      [data-testid="stHeader"] { background: rgba(16, 16, 19, .92); }
+      [data-testid="stSidebar"] { background: #17171b; border-right: 1px solid #303037; }
+      [data-testid="stSidebar"] * { color: #e9e9ec; }
       [data-testid="stSidebar"] [data-testid="stRadio"] label {
-        border-radius: 8px; padding: 0.35rem 0.55rem;
+        border-radius: 8px; padding: 0.45rem 0.6rem;
       }
       [data-testid="stMetric"] {
-        background: #fff; border: 1px solid #e0e7ef;
+        background: #1d1d22; border: 1px solid #35353c;
         border-radius: 12px; padding: 1rem;
       }
       .eyebrow {
-        color: #417064; font-size: 0.75rem; font-weight: 700;
+        color: #38d6d0; font-size: 0.75rem; font-weight: 700;
         letter-spacing: .12em; text-transform: uppercase;
       }
-      .subtle { color: #627389; }
-      div[data-testid="stAlert"] { border-radius: 10px; }
+      .subtle { color: #b4b4bc; }
+      [data-testid="stCaptionContainer"] { color: #b4b4bc; }
+      .offline-banner {
+        margin: .5rem 0 1rem; padding: .85rem 1rem;
+        border-left: 4px solid #27c7e5; border-radius: 8px;
+        background: #17282d; color: #f0fcff; line-height: 1.5;
+      }
+      .offline-banner strong { color: #55e1dc; letter-spacing: .035em; }
+      .instrument-panel {
+        position: relative; overflow: hidden; isolation: isolate;
+        display: grid; grid-template-columns: minmax(230px, .9fr) minmax(300px, 1.1fr);
+        gap: 2rem; align-items: center; padding: 2rem 2.25rem;
+        border: 1px solid #57575c; border-radius: 22px;
+        background: linear-gradient(112deg, #101013 0%, #17171b 70%, #36363b 100%);
+        box-shadow: inset 0 0 0 4px #080809, 0 16px 40px rgba(0,0,0,.24);
+      }
+      .instrument-panel:after {
+        content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+        background: linear-gradient(112deg, transparent 67%, rgba(255,255,255,.07) 67.2%, rgba(255,255,255,.015) 100%);
+      }
+      .instrument-brand { color: #aaaab0; font-size: .76rem; letter-spacing: .36em; text-align: center; }
+      .instrument-label { color: #38d6d0; font-size: .8rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+      .instrument-subtitle { color: #f4f4f6; font-size: .92rem; font-weight: 650; margin-top: .15rem; }
+      .charge-gauge { width: 190px; height: 190px; position: relative; margin: 1.1rem auto .7rem; }
+      .charge-gauge svg { display:block; width:100%; height:100%; transform:rotate(-90deg); }
+      .charge-track { fill:none; stroke:#29292e; stroke-width:10; }
+      .charge-value { fill:none; stroke:#27c7e5; stroke-width:7; stroke-linecap:round; }
+      .charge-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+      .charge-number { color:#fff; font-size:2.8rem; font-weight:750; line-height:1; }
+      .charge-unit { color:#d3d3d8; font-size:.9rem; margin-top:.3rem; }
+      .gauge-caption { color:#b7b7bf; font-size:.78rem; text-align:center; }
+      .instrument-readings { padding: .4rem 0; }
+      .reading-row { padding: .8rem 0 .65rem; border-bottom:1px solid #45454b; }
+      .reading-row:last-child { border-bottom:0; }
+      .reading-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; }
+      .reading-name { color:#efeff1; font-size:.85rem; font-weight:650; }
+      .reading-value { color:#fff; font-size:1.25rem; font-weight:700; white-space:nowrap; }
+      .reading-unit { color:#b7b7bf; font-size:.74rem; margin-left:.2rem; }
+      .reading-accent { height:3px; margin-top:.55rem; background:#f5a623; border-radius:4px; }
+      .reading-accent.cyan { background:#27c7e5; }
+      .sample-tag { display:inline-block; margin-top:1rem; padding:.32rem .58rem; border:1px solid #4b4b52; border-radius:20px; color:#d6d6da; font-size:.72rem; }
+      @media (max-width: 1050px) {
+        .instrument-panel { grid-template-columns:1fr; gap:.4rem; padding:1.4rem 1rem; }
+        .charge-gauge { width:165px; height:165px; }
+      }
     </style>
     """,
     unsafe_allow_html=True,
@@ -108,15 +148,15 @@ def show_metric_row(metrics: list[tuple[str, str, str | None]]) -> None:
 
 
 def show_mode_notice() -> None:
-    st.info(
-        "**Offline Simulation · Panasonic 18650PF dataset**  \n"
-        "Values shown are recorded dataset measurements or model estimates. "
-        "No live sensor or physical edge device is connected."
+    st.markdown(
+        '<div class="offline-banner"><strong>OFFLINE DEMONSTRATION · RECORDED BATTERY DATA</strong><br>'
+        'This screen replays laboratory measurements. No live battery or sensor is connected.</div>',
+        unsafe_allow_html=True,
     )
 
 
 def render_header(title: str, description: str) -> None:
-    st.markdown('<div class="eyebrow">Power-aware battery research</div>', unsafe_allow_html=True)
+    st.markdown('<div class="eyebrow">Battery monitor · research prototype</div>', unsafe_allow_html=True)
     st.title(title)
     st.caption(description)
 
@@ -143,8 +183,8 @@ def dataset_cycle_choices(frame: pd.DataFrame, metadata: Mapping[str, Any]) -> l
 
 def run_dashboard(frame: pd.DataFrame, selection: Mapping[str, Any]) -> None:
     render_header(
-        "Battery intelligence dashboard",
-        "A dataset-based view of battery signals, SoC-proxy estimation, and edge-oriented model work.",
+        "Battery overview",
+        "A simple view of one recorded battery sample and its model estimate.",
     )
     show_mode_notice()
     cycles = dataset_cycle_choices(frame, selection)
@@ -154,50 +194,87 @@ def run_dashboard(frame: pd.DataFrame, selection: Mapping[str, Any]) -> None:
         get_model("selected"),
         {column: float(sample[column]) for column in data.FEATURE_COLUMNS},
     )
-    model_size = data.BASELINE_MODEL.stat().st_size
-
-    st.caption(
-        f"Demonstration sample: {cycle_id}, first prepared row. "
-        "It is a recorded dataset row, not a current sensor reading."
+    gauge_value = min(100.0, max(0.0, prediction))
+    circumference = 2 * math.pi * 51
+    dash_offset = circumference * (1.0 - gauge_value / 100.0)
+    st.markdown(
+        f"""
+        <section class="instrument-panel" aria-label="Recorded battery sample display">
+          <div>
+            <div class="instrument-brand">BATTERY MONITOR</div>
+            <div class="instrument-label">MAIN BATTERY</div>
+            <div class="instrument-subtitle">Estimated charge level</div>
+            <div class="charge-gauge" role="img" aria-label="Estimated charge level {prediction:.1f} percent">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="charge-track" cx="60" cy="60" r="51"></circle>
+                <circle class="charge-value" cx="60" cy="60" r="51"
+                  stroke-dasharray="{circumference:.2f}" stroke-dashoffset="{dash_offset:.2f}"></circle>
+              </svg>
+              <div class="charge-center">
+                <div class="charge-number">{prediction:.1f}</div>
+                <div class="charge-unit">percent estimate</div>
+              </div>
+            </div>
+            <div class="gauge-caption">Model estimate from a recorded test sample</div>
+            <div class="sample-tag">RECORDED SAMPLE · PANASONIC 25 °C DATA</div>
+          </div>
+          <div class="instrument-readings">
+            <div class="reading-row">
+              <div class="reading-head"><span class="reading-name">VOLTAGE</span>
+                <span class="reading-value">{float(sample['voltage_v']):.3f}<span class="reading-unit">V</span></span></div>
+              <div class="reading-accent cyan"></div>
+            </div>
+            <div class="reading-row">
+              <div class="reading-head"><span class="reading-name">CURRENT</span>
+                <span class="reading-value">{float(sample['current_a']):.3f}<span class="reading-unit">A</span></span></div>
+              <div class="reading-accent"></div>
+            </div>
+            <div class="reading-row">
+              <div class="reading-head"><span class="reading-name">BATTERY TEMPERATURE</span>
+                <span class="reading-value">{float(sample['battery_temp_c']):.2f}<span class="reading-unit">°C</span></span></div>
+              <div class="reading-accent"></div>
+            </div>
+            <div class="reading-row">
+              <div class="reading-head"><span class="reading-name">TIME INTO RECORDED CYCLE</span>
+                <span class="reading-value">{float(sample['elapsed_time_s']):.0f}<span class="reading-unit">s</span></span></div>
+              <div class="reading-accent cyan"></div>
+            </div>
+          </div>
+        </section>
+        """,
+        unsafe_allow_html=True,
     )
-    show_metric_row(
-        [
-            ("Battery voltage", f"{sample['voltage_v']:.3f} V", None),
-            ("Battery current", f"{sample['current_a']:.3f} A", None),
-            ("Battery temperature", f"{sample['battery_temp_c']:.2f} °C", None),
-            ("Estimated SoC proxy", f"{prediction:.2f}%", "Model output; not validated physical SoC."),
-        ]
-    )
-    show_metric_row(
-        [
-            ("Selected model", "Random Forest · 100 trees", None),
-            ("Model artifact size", format_bytes(model_size), "Serialized joblib artifact on this computer."),
-            ("Reference proxy", f"{sample[data.TARGET_COLUMN]:.2f}%", "Derived label for this dataset row."),
-            ("Elapsed time", f"{sample['elapsed_time_s']:.1f} s", "Time from the selected drive-cycle file."),
-        ]
-    )
-    st.subheader("Recorded cycle trend")
+    with st.expander("What does the charge estimate mean?"):
+        st.write(
+            "This is a model estimate based on recorded battery measurements, "
+            "compared with an approximate reference calculated from the dataset. "
+            "It is not a live reading or a verified measurement of the battery's true charge."
+        )
+        st.caption(
+            f"Recorded reference for this sample: {float(sample[data.TARGET_COLUMN]):.2f}%. "
+            "For the full model tests and limitations, open Project details."
+        )
+        st.caption(f"Source test file: {cycle_id}")
+    st.subheader("Recorded charge reference over the test")
     cycle_frame = frame.loc[frame["cycle_id"] == cycle_id]
     chart_rows = cycle_frame.iloc[:: max(1, math.ceil(len(cycle_frame) / 2500))]
     st.line_chart(
         chart_rows,
         x="elapsed_time_s",
         y="soc_proxy_percent",
-        y_label="SoC proxy (%)",
-        x_label="Elapsed time (s)",
+        y_label="Approximate reference (%)",
+        x_label="Time in test (seconds)",
         height=260,
     )
     st.caption(
-        "The reference is a capacity-referenced coulomb-counting proxy. "
-        "Performance metrics describe agreement with that proxy only."
+        "The reference is calculated from the recorded test data; it is approximate, not independently measured charge."
     )
-    render_comparison_summary()
 
 
 def run_battery_monitoring(frame: pd.DataFrame) -> None:
     render_header(
-        "Battery monitoring",
-        "Explore measured signals recorded in the selected 25 °C drive-cycle file.",
+        "Recorded battery signals",
+        "Choose a laboratory test to view its recorded voltage, current, and temperature.",
     )
     show_mode_notice()
     cycle_ids = frame["cycle_id"].astype(str).drop_duplicates().tolist()
@@ -235,47 +312,53 @@ def run_battery_monitoring(frame: pd.DataFrame) -> None:
             y_label="Current (A)",
             x_label="Elapsed time (s)",
         )
-        st.subheader("Derived SoC proxy")
+        st.subheader("Approximate charge reference")
         st.line_chart(
             chart_rows,
             x="elapsed_time_s",
             y="soc_proxy_percent",
-            y_label="SoC proxy (%)",
-            x_label="Elapsed time (s)",
+            y_label="Reference (%)",
+            x_label="Time in test (s)",
         )
 
 
 def run_prediction(frame: pd.DataFrame, selection: Mapping[str, Any]) -> None:
     render_header(
-        "ML prediction",
-        "Run the saved estimator on explicit inputs or replay a recorded dataset sample.",
+        "Try a charge estimate",
+        "Replay a recorded sample or enter battery measurements to see an example estimate.",
     )
     show_mode_notice()
+    st.caption(
+        "The percentage is an approximate model estimate from the project's "
+        "research data, not a verified measurement of a battery's true charge."
+    )
     mode = st.radio(
-        "Input mode",
-        ("Replay a recorded sample", "Enter measurements"),
+        "Choose what to try",
+        ("Use a recorded sample", "Enter measurements"),
         horizontal=True,
     )
-    variant_label = st.selectbox(
-        "Estimator",
-        ("Selected baseline · 100 trees", "Optimization candidate · 50 trees"),
-    )
+    variant_label = "Selected baseline · 100 trees"
+    with st.expander("Advanced: choose model version"):
+        variant_label = st.selectbox(
+            "Model version",
+            ("Selected baseline · 100 trees", "Smaller candidate · 50 trees"),
+        )
     variant = "selected" if variant_label.startswith("Selected") else "candidate"
     cycle_id: str | None = None
     sample: pd.Series | None = None
-    if mode == "Replay a recorded sample":
+    if mode == "Use a recorded sample":
         choices = dataset_cycle_choices(frame, selection)
-        cycle_id = st.selectbox("Recorded cycle", choices, key="prediction_cycle")
+        cycle_id = st.selectbox("Recorded test", choices, key="prediction_cycle")
         cycle = frame.loc[frame["cycle_id"] == cycle_id].reset_index(drop=True)
         row_index = st.slider(
-            "Sample index within cycle",
+            "Position in recorded test",
             min_value=0,
             max_value=len(cycle) - 1,
             value=0,
             key="prediction_sample_index",
         )
         sample = cycle.iloc[row_index]
-        st.caption("Replay values come from the prepared dataset; proxy reference is available for comparison.")
+        st.caption("These are recorded measurements, not readings from a connected battery.")
         inputs: dict[str, float] = {
             column: float(sample[column]) for column in data.FEATURE_COLUMNS
         }
@@ -288,7 +371,7 @@ def run_prediction(frame: pd.DataFrame, selection: Mapping[str, Any]) -> None:
                 width="stretch",
             )
     else:
-        st.caption("Initial values are taken from a real dataset sample; edit them before running if desired.")
+        st.caption("Start with sample values, then change any measurement before requesting an estimate.")
         default_cycle = dataset_cycle_choices(frame, selection)[0]
         defaults = get_selected_sample(frame, default_cycle, 0)
         with st.form("manual_prediction"):
@@ -311,7 +394,7 @@ def run_prediction(frame: pd.DataFrame, selection: Mapping[str, Any]) -> None:
                 step=1.0,
                 format="%.5f",
             )
-            submitted = st.form_submit_button("Estimate SoC proxy", type="primary")
+            submitted = st.form_submit_button("Show estimate", type="primary")
         if submitted:
             inputs = {
                 "voltage_v": voltage,
@@ -323,7 +406,7 @@ def run_prediction(frame: pd.DataFrame, selection: Mapping[str, Any]) -> None:
         render_prediction_history()
         return
 
-    if st.button("Run dataset replay", type="primary"):
+    if st.button("Show estimate for this sample", type="primary"):
         assert sample is not None
         _display_prediction(inputs, variant, float(sample[data.TARGET_COLUMN]), cycle_id or "")
     render_prediction_history()
@@ -341,15 +424,15 @@ def _display_prediction(
         model_name = "Selected baseline · 100 trees"
     else:
         model_name = "Optimization candidate · 50 trees"
-    st.success(f"Estimated SoC proxy: **{prediction:.3f}%**")
+    st.success(f"Estimated charge level: **{prediction:.3f}%**")
     if reference is not None:
-        st.metric("Dataset proxy reference", f"{reference:.3f}%", f"{difference:.3f} percentage points absolute error")
+        st.metric("Approximate recorded reference", f"{reference:.3f}%", f"{difference:.3f} percentage points difference")
         st.caption(
             "This per-row difference is a demonstration, not a replacement for "
             "held-out-cycle evaluation or physical SoC validation."
         )
     else:
-        st.caption("No reference target exists for manually entered measurements; no error score is reported.")
+        st.caption("For entered measurements there is no recorded reference to compare against.")
     history = st.session_state.setdefault("prediction_history", [])
     history.insert(
         0,
@@ -688,6 +771,37 @@ def run_system_information(selection: Mapping[str, Any]) -> None:
     )
 
 
+def run_project_details(
+    frame: pd.DataFrame, selection: Mapping[str, Any]
+) -> None:
+    st.markdown('<div class="eyebrow">Additional information</div>', unsafe_allow_html=True)
+    st.title("Project details")
+    st.caption("Technical evidence for assessment and further investigation.")
+    section = st.selectbox(
+        "Choose a topic",
+        (
+            "Model results",
+            "Smaller model",
+            "Computer performance",
+            "Dataset and preparation",
+            "C software export",
+            "System notes",
+        ),
+    )
+    if section == "Model results":
+        run_model_comparison()
+    elif section == "Smaller model":
+        run_optimization()
+    elif section == "Computer performance":
+        run_performance()
+    elif section == "Dataset and preparation":
+        run_dataset(frame)
+    elif section == "C software export":
+        run_edge_deployment()
+    else:
+        run_system_information(selection)
+
+
 def main() -> None:
     missing = [path for path in REQUIRED_FILES if not path.is_file()]
     if missing:
@@ -700,8 +814,8 @@ def main() -> None:
         st.stop()
 
     with st.sidebar:
-        st.markdown("## 🔋 Battery intelligence")
-        st.caption("POWER-AWARE EDGE ML · RESEARCH PROTOTYPE")
+        st.markdown("## 🔋 Battery monitor")
+        st.caption("PROJECT DEMONSTRATION")
         page = st.radio(
             "Navigation",
             PAGE_NAMES,
@@ -709,30 +823,20 @@ def main() -> None:
             label_visibility="collapsed",
         )
         st.divider()
-        st.markdown("**Operating mode**")
-        st.success("Offline Simulation")
-        st.caption("No physical device connected")
+        st.markdown("**Data source**")
+        st.success("Recorded laboratory data")
+        st.caption("No live sensor is connected.")
 
     frame = get_proxy_data()
     selection = get_json(data.MODEL_SELECTION)
-    if page == "Dashboard":
+    if page == "Overview":
         run_dashboard(frame, selection)
-    elif page == "Battery Monitoring":
+    elif page == "Recorded signals":
         run_battery_monitoring(frame)
-    elif page == "ML Prediction":
+    elif page == "Try an estimate":
         run_prediction(frame, selection)
-    elif page == "Model Comparison":
-        run_model_comparison()
-    elif page == "Model Optimization":
-        run_optimization()
-    elif page == "Performance":
-        run_performance()
-    elif page == "Dataset":
-        run_dataset(frame)
-    elif page == "Edge Deployment":
-        run_edge_deployment()
     else:
-        run_system_information(selection)
+        run_project_details(frame, selection)
 
 
 main()

@@ -376,9 +376,13 @@ python -m streamlit run src/ui/app.py
 
 The dashboard reads the existing prepared Panasonic dataset, model artifacts,
 and experiment result files; it does not retrain models or change the research
-pipeline. Its prediction page supports both replaying a recorded dataset sample
-and entering four explicit model inputs in the order voltage (V), current (A),
-battery temperature (°C), and elapsed time (s).
+pipeline. The main navigation is grouped into four plain-language areas:
+Overview, Recorded signals, Try an estimate, and Project details. Project
+details contains the model comparisons, optimization trade-offs, computer
+benchmarks, dataset preparation, C export validation, and system notes. The
+estimate page supports both replaying a recorded dataset sample and entering
+four measurements in the order voltage (V), current (A), battery temperature
+(°C), and elapsed time (s).
 
 The application is **Offline Simulation** only. Dataset signals are not live
 sensor readings, the prediction target is a derived SoC proxy rather than
